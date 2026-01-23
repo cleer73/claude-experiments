@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo App</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <h1>Todo App</h1>
+      <nav id="tag-nav">
+        <h2>Tags</h2>
+        <ul id="tag-list"></ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <form id="todo-form">
+        <input
+          type="text"
+          id="todo-input"
+          placeholder="What needs to be done?"
+          autocomplete="off"
+          required
+        >
+        <button type="submit">Add</button>
+      </form>
+
+      <div id="tag-filter" class="hidden"></div>
+
+      <ul id="todo-list"></ul>
+
+      <div id="empty-state" class="empty-state">
+        No todos yet. Add one above!
+      </div>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

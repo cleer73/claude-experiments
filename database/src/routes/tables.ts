@@ -8,6 +8,11 @@ function sanitizeName(name: string): string {
   return name.replace(/[^a-zA-Z0-9_]/g, "_");
 }
 
+function quoteIdentifier(name: string): string {
+  // Double any existing double quotes and wrap in double quotes
+  return `"${name.replace(/"/g, '""')}"`;
+}
+
 function mapSqliteType(type: ColumnMeta["type"]): string {
   switch (type) {
     case "text":
@@ -65,21 +70,21 @@ tables.post("/", async (c) => {
     const tableResult = db.query("SELECT last_insert_rowid() as id").get() as { id: number };
     const tableId = tableResult.id;
 
-    const columnDefs = ["id INTEGER PRIMARY KEY AUTOINCREMENT"];
+    const columnDefs = ['"id" INTEGER PRIMARY KEY AUTOINCREMENT'];
 
     for (let i = 0; i < body.columns.length; i++) {
       const col = body.columns[i];
       const safeColName = sanitizeName(col.name);
       const sqlType = mapSqliteType(col.type);
 
-      columnDefs.push(`${safeColName} ${sqlType}`);
+      columnDefs.push(`${quoteIdentifier(safeColName)} ${sqlType}`);
 
       db.query(
         "INSERT INTO _columns (table_id, name, type, position) VALUES (?, ?, ?, ?)"
       ).run(tableId, safeColName, col.type, i);
     }
 
-    db.exec(`CREATE TABLE ${safeName} (${columnDefs.join(", ")})`);
+    db.exec(`CREATE TABLE ${quoteIdentifier(safeName)} (${columnDefs.join(", ")})`);
     db.exec("COMMIT");
 
     return c.json({ success: true, name: safeName, id: tableId }, 201);
@@ -99,7 +104,7 @@ tables.get("/:name/rows", (c) => {
   }
 
   try {
-    const rows = db.query(`SELECT * FROM ${name}`).all();
+    const rows = db.query(`SELECT * FROM ${quoteIdentifier(name)}`).all();
     return c.json(rows);
   } catch (error) {
     return c.json({ error: String(error) }, 500);
@@ -138,8 +143,9 @@ tables.post("/:name/rows", async (c) => {
 
   try {
     const placeholders = insertColumns.map(() => "?").join(", ");
+    const quotedColumns = insertColumns.map(quoteIdentifier).join(", ");
     db.query(
-      `INSERT INTO ${name} (${insertColumns.join(", ")}) VALUES (${placeholders})`
+      `INSERT INTO ${quoteIdentifier(name)} (${quotedColumns}) VALUES (${placeholders})`
     ).run(...insertValues);
 
     const lastId = db.query("SELECT last_insert_rowid() as id").get() as { id: number };
@@ -171,7 +177,7 @@ tables.put("/:name/rows/:id", async (c) => {
   for (const [key, value] of Object.entries(body)) {
     const safeKey = sanitizeName(key);
     if (validColumns.includes(safeKey)) {
-      updates.push(`${safeKey} = ?`);
+      updates.push(`${quoteIdentifier(safeKey)} = ?`);
       values.push(value);
     }
   }
@@ -183,7 +189,7 @@ tables.put("/:name/rows/:id", async (c) => {
   values.push(rowId);
 
   try {
-    db.query(`UPDATE ${name} SET ${updates.join(", ")} WHERE id = ?`).run(...values);
+    db.query(`UPDATE ${quoteIdentifier(name)} SET ${updates.join(", ")} WHERE "id" = ?`).run(...values);
     return c.json({ success: true });
   } catch (error) {
     return c.json({ error: String(error) }, 500);
@@ -201,7 +207,7 @@ tables.delete("/:name/rows/:id", (c) => {
   }
 
   try {
-    db.query(`DELETE FROM ${name} WHERE id = ?`).run(rowId);
+    db.query(`DELETE FROM ${quoteIdentifier(name)} WHERE "id" = ?`).run(rowId);
     return c.json({ success: true });
   } catch (error) {
     return c.json({ error: String(error) }, 500);
@@ -218,10 +224,17 @@ tables.delete("/:name", (c) => {
   }
 
   try {
-    db.exec(`DROP TABLE IF EXISTS ${name}`);
+    db.exec("BEGIN TRANSACTION");
+    db.exec(`DROP TABLE IF EXISTS ${quoteIdentifier(name)}`);
     db.query("DELETE FROM _tables WHERE name = ?").run(name);
+    db.exec("COMMIT");
     return c.json({ success: true });
   } catch (error) {
+    try {
+      db.exec("ROLLBACK");
+    } catch {
+      // Ignore rollback errors to avoid masking the original error
+    }
     return c.json({ error: String(error) }, 500);
   }
 });

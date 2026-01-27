@@ -201,14 +201,30 @@
 
     function showAddRowModal() {
       const fields = document.getElementById('rowFields');
-      fields.innerHTML = currentSchema.columns.map(col => `
-        <div class="form-group">
-          <label>${col.name} (${col.type})</label>
-          <input type="${col.type === 'integer' || col.type === 'real' ? 'number' : 'text'}"
-                 name="${col.name}"
-                 ${col.type === 'real' ? 'step="any"' : ''}>
-        </div>
-      `).join('');
+      fields.innerHTML = currentSchema.columns.map(col => {
+        let inputHtml;
+
+        if (col.type === 'integer' || col.type === 'real') {
+          const stepAttr = col.type === 'real' ? ' step="any"' : '';
+          inputHtml = `<input type="number" name="${col.name}"${stepAttr}>`;
+        } else if (col.type === 'boolean') {
+          inputHtml = `
+            <select name="${col.name}">
+              <option value="">-- Select --</option>
+              <option value="true">True</option>
+              <option value="false">False</option>
+            </select>`;
+        } else {
+          inputHtml = `<input type="text" name="${col.name}">`;
+        }
+
+        return `
+          <div class="form-group">
+            <label>${col.name} (${col.type})</label>
+            ${inputHtml}
+          </div>
+        `;
+      }).join('');
       document.getElementById('addRowModal').classList.remove('hidden');
     }
 
@@ -225,7 +241,7 @@
         if (input.value) {
           data[col.name] = col.type === 'integer' ? parseInt(input.value) :
                           col.type === 'real' ? parseFloat(input.value) :
-                          col.type === 'boolean' ? input.value === 'true' :
+                          col.type === 'boolean' ? ['true', '1', 'yes', 'on'].includes(input.value.trim().toLowerCase()) :
                           input.value;
         }
       });

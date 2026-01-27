@@ -218,7 +218,7 @@ tables.delete("/:name/rows/:id", (c) => {
 tables.delete("/:name", (c) => {
   const name = sanitizeName(c.req.param("name"));
 
-  const table = db.query("SELECT * FROM _tables WHERE name = ?").get(name);
+  const table = db.query("SELECT * FROM _tables WHERE name = ?").get(name) as TableMeta | null;
   if (!table) {
     return c.json({ error: "Table not found" }, 404);
   }
@@ -226,7 +226,7 @@ tables.delete("/:name", (c) => {
   try {
     db.exec("BEGIN TRANSACTION");
     db.exec(`DROP TABLE IF EXISTS ${quoteIdentifier(name)}`);
-    db.query("DELETE FROM _tables WHERE name = ?").run(name);
+    db.query("DELETE FROM _tables WHERE id = ?").run(table.id);
     db.exec("COMMIT");
     return c.json({ success: true });
   } catch (error) {

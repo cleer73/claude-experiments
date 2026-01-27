@@ -241,7 +241,7 @@
         if (input.value) {
           data[col.name] = col.type === 'integer' ? parseInt(input.value) :
                           col.type === 'real' ? parseFloat(input.value) :
-                          col.type === 'boolean' ? ['true', '1', 'yes', 'on'].includes(input.value.trim().toLowerCase()) :
+                          col.type === 'boolean' ? input.value === 'true' :
                           input.value;
         }
       });

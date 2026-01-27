@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Tool</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <h1>Database Tool</h1>
+      <nav>
+        <h2>Tables</h2>
+        <ul class="table-list" id="tableList"></ul>
+      </nav>
+      <button class="btn btn-primary btn-full" onclick="showCreateTableModal()">
+        + New Table
+      </button>
+    </aside>
+
+    <main class="main-content">
+      <div id="emptyState" class="empty-state">
+        <p>Select a table from the sidebar or create a new one.</p>
+      </div>
+
+      <div id="tableView" class="hidden">
+        <div class="toolbar">
+          <h2 id="tableName"></h2>
+          <div class="toolbar-actions">
+            <button class="btn btn-primary btn-small" onclick="showAddRowModal()">+ Add Row</button>
+            <button class="btn btn-danger btn-small" onclick="deleteCurrentTable()">Delete Table</button>
+          </div>
+        </div>
+        <table id="dataTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div id="createTableModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Create New Table</h3>
+      <form id="createTableForm" onsubmit="createTable(event)">
+        <div class="form-group">
+          <label>Table Name</label>
+          <input type="text" id="newTableName" required pattern="[a-zA-Z][a-zA-Z0-9_]*" placeholder="my_table">
+        </div>
+        <div class="form-group">
+          <label>Columns</label>
+          <div id="columnList">
+            <div class="column-row">
+              <input type="text" placeholder="Column name" required>
+              <select>
+                <option value="text">Text</option>
+                <option value="integer">Integer</option>
+                <option value="real">Real</option>
+                <option value="boolean">Boolean</option>
+              </select>
+              <button type="button" class="btn btn-secondary" onclick="removeColumn(this)">-</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-small" onclick="addColumnField()" style="margin-top: 0.5rem;">
+            + Add Column
+          </button>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" onclick="hideCreateTableModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="addRowModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Add Row</h3>
+      <form id="addRowForm" onsubmit="addRow(event)">
+        <div id="rowFields"></div>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" onclick="hideAddRowModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let currentTable = null;
+    let currentSchema = null;
+
+    async function loadTables() {
+      const res = await fetch('/api/tables');
+      const tables = await res.json();
+      const list = document.getElementById('tableList');
+      list.innerHTML = tables.map(t =>
+        `<li onclick="selectTable('${t.name}')" ${currentTable === t.name ? 'class="active"' : ''}>${t.name}</li>`
+      ).join('');
+    }
+
+    async function selectTable(name) {
+      currentTable = name;
+      await loadTables();
+
+      const schemaRes = await fetch(`/api/tables/${name}/schema`);
+      currentSchema = await schemaRes.json();
+
+      const rowsRes = await fetch(`/api/tables/${name}/rows`);
+      const rows = await rowsRes.json();
+
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('tableView').classList.remove('hidden');
+      document.getElementById('tableName').textContent = name;
+
+      const thead = document.getElementById('tableHead');
+      const columns = ['id', ...currentSchema.columns.map(c => c.name)];
+      thead.innerHTML = `<tr>${columns.map(c => `<th>${c}</th>`).join('')}<th></th></tr>`;
+
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = rows.map(row => `
+        <tr>
+          ${columns.map(c => `<td>${row[c] ?? ''}</td>`).join('')}
+          <td class="row-actions">
+            <button class="delete-row-btn" onclick="deleteRow(${row.id})" title="Delete row">&times;</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function showCreateTableModal() {
+      document.getElementById('createTableModal').classList.remove('hidden');
+      document.getElementById('newTableName').value = '';
+      document.getElementById('columnList').innerHTML = `
+        <div class="column-row">
+          <input type="text" placeholder="Column name" required>
+          <select>
+            <option value="text">Text</option>
+            <option value="integer">Integer</option>
+            <option value="real">Real</option>
+            <option value="boolean">Boolean</option>
+          </select>
+          <button type="button" class="btn btn-secondary" onclick="removeColumn(this)">-</button>
+        </div>
+      `;
+    }
+
+    function hideCreateTableModal() {
+      document.getElementById('createTableModal').classList.add('hidden');
+    }
+
+    function addColumnField() {
+      const list = document.getElementById('columnList');
+      const row = document.createElement('div');
+      row.className = 'column-row';
+      row.innerHTML = `
+        <input type="text" placeholder="Column name" required>
+        <select>
+          <option value="text">Text</option>
+          <option value="integer">Integer</option>
+          <option value="real">Real</option>
+          <option value="boolean">Boolean</option>
+        </select>
+        <button type="button" class="btn btn-secondary" onclick="removeColumn(this)">-</button>
+      `;
+      list.appendChild(row);
+    }
+
+    function removeColumn(btn) {
+      const list = document.getElementById('columnList');
+      if (list.children.length > 1) {
+        btn.parentElement.remove();
+      }
+    }
+
+    async function createTable(e) {
+      e.preventDefault();
+      const name = document.getElementById('newTableName').value;
+      const columnRows = document.querySelectorAll('#columnList .column-row');
+      const columns = Array.from(columnRows).map(row => ({
+        name: row.querySelector('input').value,
+        type: row.querySelector('select').value
+      }));
+
+      const res = await fetch('/api/tables', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, columns })
+      });
+
+      if (res.ok) {
+        hideCreateTableModal();
+        await loadTables();
+        await selectTable(name);
+      } else {
+        const error = await res.json();
+        alert(error.error);
+      }
+    }
+
+    function showAddRowModal() {
+      const fields = document.getElementById('rowFields');
+      fields.innerHTML = currentSchema.columns.map(col => `
+        <div class="form-group">
+          <label>${col.name} (${col.type})</label>
+          <input type="${col.type === 'integer' || col.type === 'real' ? 'number' : 'text'}"
+                 name="${col.name}"
+                 ${col.type === 'real' ? 'step="any"' : ''}>
+        </div>
+      `).join('');
+      document.getElementById('addRowModal').classList.remove('hidden');
+    }
+
+    function hideAddRowModal() {
+      document.getElementById('addRowModal').classList.add('hidden');
+    }
+
+    async function addRow(e) {
+      e.preventDefault();
+      const form = document.getElementById('addRowForm');
+      const data = {};
+      currentSchema.columns.forEach(col => {
+        const input = form.querySelector(`[name="${col.name}"]`);
+        if (input.value) {
+          data[col.name] = col.type === 'integer' ? parseInt(input.value) :
+                          col.type === 'real' ? parseFloat(input.value) :
+                          col.type === 'boolean' ? input.value === 'true' :
+                          input.value;
+        }
+      });
+
+      const res = await fetch(`/api/tables/${currentTable}/rows`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        hideAddRowModal();
+        await selectTable(currentTable);
+      }
+    }
+
+    async function deleteRow(id) {
+      if (!confirm('Delete this row?')) return;
+      await fetch(`/api/tables/${currentTable}/rows/${id}`, { method: 'DELETE' });
+      await selectTable(currentTable);
+    }
+
+    async function deleteCurrentTable() {
+      if (!confirm(`Delete table "${currentTable}"?`)) return;
+      await fetch(`/api/tables/${currentTable}`, { method: 'DELETE' });
+      currentTable = null;
+      currentSchema = null;
+      document.getElementById('emptyState').classList.remove('hidden');
+      document.getElementById('tableView').classList.add('hidden');
+      await loadTables();
+    }
+
+    loadTables();
+  </script>
+</body>
+</html>

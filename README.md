@@ -22,3 +22,20 @@ A full-stack todo application built with Bun, TypeScript, and SQLite.
 - Language: TypeScript
 - Database: SQLite (via `bun:sqlite`)
 - Frontend: Vanilla HTML/CSS/JavaScript
+
+### [Database Tool](./database/README.md)
+
+A simple database management tool inspired by MS Access and Baserow.
+
+**Features:**
+- Create and manage tables with custom schemas
+- Support for Text, Integer, Real, and Boolean column types
+- Add, edit, and delete rows through a web interface
+- RESTful API for programmatic access
+
+**Tech Stack:**
+- Runtime: [Bun](https://bun.sh)
+- Language: TypeScript
+- Web Framework: [Hono](https://hono.dev)
+- Database: SQLite (via `bun:sqlite`)
+- Frontend: Vanilla HTML/CSS/JavaScript

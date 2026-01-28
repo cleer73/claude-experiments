@@ -95,9 +95,16 @@
       const res = await fetch('/api/tables');
       const tables = await res.json();
       const list = document.getElementById('tableList');
-      list.innerHTML = tables.map(t =>
-        `<li onclick="selectTable('${t.name}')" ${currentTable === t.name ? 'class="active"' : ''}>${t.name}</li>`
-      ).join('');
+      list.innerHTML = '';
+      tables.forEach(t => {
+        const li = document.createElement('li');
+        li.textContent = t.name;
+        if (currentTable === t.name) {
+          li.classList.add('active');
+        }
+        li.addEventListener('click', () => selectTable(t.name));
+        list.appendChild(li);
+      });
     }
 
     async function selectTable(name) {

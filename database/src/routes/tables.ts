@@ -225,8 +225,9 @@ tables.delete("/:name", (c) => {
 
   try {
     db.exec("BEGIN TRANSACTION");
-    db.exec(`DROP TABLE IF EXISTS ${quoteIdentifier(name)}`);
+    db.query("DELETE FROM _columns WHERE table_id = ?").run(table.id);
     db.query("DELETE FROM _tables WHERE id = ?").run(table.id);
+    db.exec(`DROP TABLE IF EXISTS ${quoteIdentifier(name)}`);
     db.exec("COMMIT");
     return c.json({ success: true });
   } catch (error) {

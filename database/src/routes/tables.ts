@@ -70,7 +70,7 @@ tables.post("/", async (c) => {
     const tableResult = db.query("SELECT last_insert_rowid() as id").get() as { id: number };
     const tableId = tableResult.id;
 
-    const columnDefs = ['"id" INTEGER PRIMARY KEY AUTOINCREMENT'];
+    const columnDefs = [`${quoteIdentifier("id")} INTEGER PRIMARY KEY AUTOINCREMENT`];
 
     for (let i = 0; i < body.columns.length; i++) {
       const col = body.columns[i];

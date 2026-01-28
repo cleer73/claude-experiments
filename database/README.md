@@ -6,7 +6,7 @@ A simple database management tool inspired by MS Access and Baserow. Create tabl
 
 - Create and delete tables with custom schemas
 - Define columns with types: Text, Integer, Real, Boolean
-- Add, edit, and delete rows
+- Add, update, and delete rows
 - View data in a spreadsheet-like interface
 - RESTful API for all operations
 - SQLite storage for persistence

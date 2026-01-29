@@ -10,6 +10,7 @@ app.use("*", cors());
 app.route("/api/tables", tables);
 
 app.get("/style.css", serveStatic({ path: "./public/style.css" }));
+app.get("/app.js", serveStatic({ path: "./public/app.js" }));
 app.get("/", serveStatic({ path: "./public/index.html" }));
 
 const port = process.env.PORT || 3000;

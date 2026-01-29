@@ -60,6 +60,7 @@ The app will be available at http://localhost:3000
 database/
 ├── public/
 │   ├── index.html      # Frontend HTML entry point
+│   ├── app.js          # Frontend application logic
 │   └── style.css       # Frontend styles
 ├── src/
 │   ├── db/

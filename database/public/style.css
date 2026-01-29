@@ -188,17 +188,33 @@ tr:hover .row-actions {
   opacity: 1;
 }
 
+.edit-row-btn,
 .delete-row-btn {
-  background: none;
   border: none;
-  color: #dc3545;
-  font-size: 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.edit-row-btn {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.edit-row-btn:hover {
+  background: #bbdefb;
+}
+
+.delete-row-btn {
+  background: #fdecea;
+  color: #c62828;
 }
 
 .delete-row-btn:hover {
-  color: #b91c1c;
+  background: #f9c4c0;
 }
 
 /* Modal Styles */

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Tool</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <h1>Database Tool</h1>
+      <nav>
+        <h2>Tables</h2>
+        <ul class="table-list" id="tableList"></ul>
+      </nav>
+      <button class="btn btn-primary btn-full" onclick="showCreateTableModal()">
+        + New Table
+      </button>
+    </aside>
+
+    <main class="main-content">
+      <div id="emptyState" class="empty-state">
+        <p>Select a table from the sidebar or create a new one.</p>
+      </div>
+
+      <div id="tableView" class="hidden">
+        <div class="toolbar">
+          <h2 id="tableName"></h2>
+          <div class="toolbar-actions">
+            <button class="btn btn-primary btn-small" onclick="showAddRowModal()">+ Add Row</button>
+            <button class="btn btn-danger btn-small" onclick="deleteCurrentTable()">Delete Table</button>
+          </div>
+        </div>
+        <table id="dataTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div id="createTableModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Create New Table</h3>
+      <form id="createTableForm" onsubmit="createTable(event)">
+        <div class="form-group">
+          <label>Table Name</label>
+          <input type="text" id="newTableName" required pattern="[a-zA-Z][a-zA-Z0-9_]*" placeholder="my_table">
+        </div>
+        <div class="form-group">
+          <label>Columns</label>
+          <div id="columnList">
+            <div class="column-row">
+              <input type="text" placeholder="Column name" required>
+              <select>
+                <option value="text">Text</option>
+                <option value="integer">Integer</option>
+                <option value="real">Real</option>
+                <option value="boolean">Boolean</option>
+              </select>
+              <button type="button" class="btn btn-secondary" onclick="removeColumn(this)">-</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-small" onclick="addColumnField()" style="margin-top: 0.5rem;">
+            + Add Column
+          </button>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" onclick="hideCreateTableModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="editRowModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Edit Row</h3>
+      <form id="editRowForm" onsubmit="editRow(event)">
+        <div id="editRowFields"></div>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" onclick="hideEditRowModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="addRowModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Add Row</h3>
+      <form id="addRowForm" onsubmit="addRow(event)">
+        <div id="rowFields"></div>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" onclick="hideAddRowModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -59,7 +59,8 @@ The app will be available at http://localhost:3000
 ```
 database/
 ├── public/
-│   └── index.html      # Frontend UI
+│   ├── index.html      # Frontend HTML entry point
+│   └── style.css       # Frontend styles
 ├── src/
 │   ├── db/
 │   │   └── index.ts    # SQLite database setup

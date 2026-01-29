@@ -212,28 +212,39 @@
       }
     }
 
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function showAddRowModal() {
       const fields = document.getElementById('rowFields');
       fields.innerHTML = currentSchema.columns.map(col => {
+        const safeName = escapeHtml(col.name);
+        const safeType = escapeHtml(col.type);
         let inputHtml;
 
         if (col.type === 'integer' || col.type === 'real') {
           const stepAttr = col.type === 'real' ? ' step="any"' : '';
-          inputHtml = `<input type="number" name="${col.name}"${stepAttr}>`;
+          inputHtml = `<input type="number" name="${safeName}"${stepAttr}>`;
         } else if (col.type === 'boolean') {
           inputHtml = `
-            <select name="${col.name}">
+            <select name="${safeName}">
               <option value="">-- Select --</option>
               <option value="true">True</option>
               <option value="false">False</option>
             </select>`;
         } else {
-          inputHtml = `<input type="text" name="${col.name}">`;
+          inputHtml = `<input type="text" name="${safeName}">`;
         }
 
         return `
           <div class="form-group">
-            <label>${col.name} (${col.type})</label>
+            <label>${safeName} (${safeType})</label>
             ${inputHtml}
           </div>
         `;
